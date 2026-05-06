@@ -1,0 +1,47 @@
+from kafka import KafkaConsumer, KafkaAdminClient
+from kafka.admin import NewTopic
+from kafka.errors import TopicAlreadyExistsError
+
+BOOTSTRAP_SERVERS = "kafka:9092"   # correct for python-env container
+TOPIC = "my_topic"
+PARTITIONS = 1
+REPLICATION = 1
+
+def ensure_topic():
+    admin = KafkaAdminClient(bootstrap_servers=BOOTSTRAP_SERVERS)
+
+    existing_topics = admin.list_topics()
+
+    if TOPIC in existing_topics:
+        print(f"Topic '{TOPIC}' already exists.")
+        return
+
+    print(f"Creating topic '{TOPIC}'...")
+    try:
+        admin.create_topics([
+            NewTopic(
+                name=TOPIC,
+                num_partitions=PARTITIONS,
+                replication_factor=REPLICATION
+            )
+        ])
+        print(f"Topic '{TOPIC}' created.")
+    except TopicAlreadyExistsError:
+        print(f"Topic '{TOPIC}' already exists.")
+
+def consume():
+    consumer = KafkaConsumer(
+        TOPIC,
+        bootstrap_servers=BOOTSTRAP_SERVERS,
+        auto_offset_reset="earliest",
+        enable_auto_commit=True,
+        group_id="python-env-consumer"
+    )
+
+    print(f"Consuming from topic '{TOPIC}'...")
+    for msg in consumer:
+        print(f"Received: {msg.value.decode('utf-8')}")
+
+if __name__ == "__main__":
+    ensure_topic()
+    consume()

@@ -1,0 +1,8 @@
+#!/usr/bin/env python3
+
+BOOTSTRAP_SERVERS = "kafka:9092"
+PARTITIONS = 1
+REPLICATION = 1
+RETENTION = 600000
+POLICY = "delete"
+SEGMENT = 599990

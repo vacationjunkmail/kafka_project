@@ -1,0 +1,19 @@
+cmdline
+  git init -b main
+  git add
+  git commit -m "Initial Commit"
+  Go to github-> Repositories-> New
+    <repo name>
+
+  back to cmdline
+  git remote add origin git@github.com:vacationjunkmail/<repo_name>.git
+  git remote -v
+  git push -u origin main
+  or
+  be careful with this: git push -u origin main --force
+
+
+  Now create a dev branch:
+  git branch dev
+  git switch dev
+  git push -u origin dev
