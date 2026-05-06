@@ -2,18 +2,36 @@ cmdline
   git init -b main
   git add
   git commit -m "Initial Commit"
-  Go to github-> Repositories-> New
-    <repo name>
+Go to github-> Repositories-> New
+  <repo name>
 
-  back to cmdline
+cmdline
   git remote add origin git@github.com:vacationjunkmail/<repo_name>.git
   git remote -v
   git push -u origin main
   or
   be careful with this: git push -u origin main --force
 
-
   Now create a dev branch:
   git branch dev
   git switch dev
   git push -u origin dev
+
+web
+  github.com-> Settings -> Code and automation -> Branches -> Add Classic branch protection rule
+  Branch name pattern: main
+  Require a pull request before merging
+  Require approvals: 1
+  save changes
+
+cmdline
+  git switch dev
+  git pull
+  git switch -c feature/<name here>
+  make changes
+  git add .
+  git commit -m "message"
+  git push -u origin feature/<name here>
+
+
+
