@@ -32,3 +32,14 @@ cmdline
   git add .
   git commit -m "message"
   git push -u origin feature/<name here>
+
+web
+  Merge into dev.
+  Delete branch if done.
+
+cmdline
+  git switch dev
+  git pull
+  git fetch --prune
+  git branch -d feature/<name here>
+
