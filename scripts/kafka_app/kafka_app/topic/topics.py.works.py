@@ -1,21 +1,20 @@
 #!/usr/bin/env python3
-from kafka import KafkaConsumer, KafkaAdminClient, TopicPartition
+from kafka import KafkaConsumer, TopicPartition
 from kafka.admin import NewTopic
 from kafka.errors import TopicAlreadyExistsError, UnknownTopicOrPartitionError
 from constant import constants
 from data_class.topic_data_classes import TopicCreationResult, Status
 from utils.kafka_errors import extract_error_message
 from auth.auth_data_class import AuthResponse
-import json
 
-def ensure_topic(topic:str, admin: AuthResponse) -> TopicCreationResult:
 
-    results = TopicCreationResult(topic = topic)
+def ensure_topic(topic: str, admin: AuthResponse) -> TopicCreationResult:
+    results = TopicCreationResult(topic=topic)
 
     try:
         is_available = admin.describe_topics([topic])
-        
-        if is_available[0]['error_code'] == 0:
+
+        if is_available[0]["error_code"] == 0:
             results.status = Status.EXISTS.value
             results.message = f"Topic '{topic}' already exists"
             results.created = True
@@ -30,13 +29,27 @@ def ensure_topic(topic:str, admin: AuthResponse) -> TopicCreationResult:
         results.message = str(e)
     return results
 
-def create_topic(topic:str, admin: AuthResponse) -> TopicCreationResult:
+
+def create_topic(topic: str, admin: AuthResponse) -> TopicCreationResult:
     topic_check = ensure_topic(topic, admin)
     if topic_check.created:
         return topic_check
-    results = TopicCreationResult(topic = topic)
+    results = TopicCreationResult(topic=topic)
     try:
-        admin.create_topics([NewTopic(name=topic,num_partitions=constants.PARTITIONS,replication_factor=constants.REPLICATION, topic_configs = {"retention.ms":constants.RETENTION,"cleanup.policy":constants.POLICY, "segment.ms": constants.SEGMENT})])
+        admin.create_topics(
+            [
+                NewTopic(
+                    name=topic,
+                    num_partitions=constants.PARTITIONS,
+                    replication_factor=constants.REPLICATION,
+                    topic_configs={
+                        "retention.ms": constants.RETENTION,
+                        "cleanup.policy": constants.POLICY,
+                        "segment.ms": constants.SEGMENT,
+                    },
+                )
+            ]
+        )
         results.status = Status.CREATED.value
         results.message = f"Topic '{topic}' created"
         results.created = True
@@ -50,11 +63,12 @@ def create_topic(topic:str, admin: AuthResponse) -> TopicCreationResult:
         results.message = str(e)
         return results
 
-def delete_topic(topic:str, admin: AuthResponse) -> TopicCreationResult:
+
+def delete_topic(topic: str, admin: AuthResponse) -> TopicCreationResult:
     topic_check = ensure_topic(topic, admin)
     if not topic_check.created:
         return topic_check
-    results = TopicCreationResult(topic = topic)
+    results = TopicCreationResult(topic=topic)
     try:
         admin.delete_topics([topic])
         results.status = Status.DELETED.value
@@ -64,16 +78,14 @@ def delete_topic(topic:str, admin: AuthResponse) -> TopicCreationResult:
         results.message = str(e)
     return results
 
-def consume (topic: str, admin):
+
+def consume(topic: str, admin):
     topic_check = ensure_topic(topic, admin)
     if not topic_check.created:
         print(topic_check.message)
         return
-    
-    consumer = KafkaConsumer(
-        bootstrap_servers="kafka:9092",
-        consumer_timeout_ms=1000
-    )
+
+    consumer = KafkaConsumer(bootstrap_servers="kafka:9092", consumer_timeout_ms=1000)
 
     print("consumer created", flush=True)
 
