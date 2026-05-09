@@ -2,8 +2,8 @@
 
 from dataclasses import dataclass
 
+
 @dataclass
 class BaseResponseDataClass:
     status: str | None
     message: str = ""
-
