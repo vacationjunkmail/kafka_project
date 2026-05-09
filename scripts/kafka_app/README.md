@@ -27,15 +27,17 @@ Kafka App
     -t is mandatory for all options
 
     From host:
-      Consumer:
-        docker exec python-env python /app/kafka_app/kafka_app/main.py -t "Dana1" -c
+      Consumer (Dana1 consumer is run when the application starts. To view follow logs):
+        docker exec python-env python /app/ikafka_app/kafka_app/main.py -t "Dana1" -c
+        
 
       Producer:
         One and done:
           docker exec python-env python /app/kafka_app/kafka_app/main.py -t "Dana1" -pc "First Message from python23asdf"
         Streaming:
           docker exec -it python-env python /app/kafka_app/kafka_app/main.py -t "Dana1" -ps
-      
+          # View Messages:
+            docker logs --follow python-env
       Add Topic:
         docker exec python-env python /app/kafka_app/kafka_app/main.py -t "Dana12" -a
 
