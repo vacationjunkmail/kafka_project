@@ -10,7 +10,7 @@ current_dir=$(pwd)
 git fetch --prune
 
 # Check if remote branch exists
-if git ls-remote --heads origin "$branch" >/dev/null 2>&1; then
+if [ -n "$(git ls-remote --heads origin "$branch")" ]; then
   echo "Remote branch '${branch}' still exists. Not deleting."
 else
   echo "Remote branch '${branch}' does NOT exist. Deleting local branch..."
