@@ -7,7 +7,7 @@ from data_class.topic_data_classes import TopicCreationResult, Status
 from utils.kafka_errors import extract_error_message
 from auth.auth_data_class import AuthResponse
 import time
-from producer.producer import producer
+from producer.sender import send_message, send_message_cli
 
 
 def ensure_topic(topic: str, admin: AuthResponse) -> TopicCreationResult:
@@ -105,19 +105,14 @@ def producer_cli(topic: str, msg: str, admin):
     if not topic_check.created:
         print(topic_check.message)
         return ""
-    print(f"{topic}:{msg}")
-
-    producer.send(topic, msg)
-    producer.flush()
-    print(f"'{msg}' sent to '{topic}'")
+    send_message_cli(topic=topic, msg=msg)
 
 
 def producer_stream(topic: str):
     while True:
         try:
             msg = input()
-            producer.send(topic, msg)
-            producer.flush()
+            send_message(topic=topic, msg=msg)
         except KeyboardInterrupt:
             print("Goodbye", flush=True)
             break
@@ -125,8 +120,7 @@ def producer_stream(topic: str):
 
 def production_watcher(topic: str, log_file, admin: AuthResponse):
     for line in tail_file(log_file):
-        producer.send(topic, line)
-        producer.flush()
+        send_message(topic=topic, msg=line)
 
 
 def tail_file(path: str):
