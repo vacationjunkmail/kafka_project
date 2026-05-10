@@ -5,9 +5,11 @@ from data_class.base_classes import BaseResponseDataClass
 from typing import Optional
 from enum import Enum
 
+
 class Status(Enum):
     SUCCESS = "success"
     ERROR = "error"
+
 
 @dataclass
 class AuthResponse(BaseResponseDataClass):
@@ -16,8 +18,10 @@ class AuthResponse(BaseResponseDataClass):
 
     @classmethod
     def success(cls, admin):
-        return cls(status=Status.SUCCESS, message = "Connected", admin = admin, is_auth = True)
-    
+        return cls(
+            status=Status.SUCCESS, message="Connected", admin=admin, is_auth=True
+        )
+
     @classmethod
-    def error(cls,msg):
+    def error(cls, msg):
         return cls(status=Status.ERROR, message=msg, admin=None)

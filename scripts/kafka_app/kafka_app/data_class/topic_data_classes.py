@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Optional
 
+
 class Status(Enum):
     CREATED = "created"
     ERROR = "error"
@@ -11,10 +12,10 @@ class Status(Enum):
     DELETED = "deleted"
     NOTEXIST = "open"
 
+
 @dataclass
 class TopicCreationResult:
     topic: str
     status: Optional[Status] = None
     message: str = ""
     created: bool = False
-

@@ -1,22 +1,22 @@
 #!/usr/bin/env python3
-from kafka import KafkaConsumer, KafkaAdminClient, KafkaProducer
+from kafka import KafkaConsumer
 from kafka.admin import NewTopic
 from kafka.errors import TopicAlreadyExistsError, UnknownTopicOrPartitionError
 from constant import constants
 from data_class.topic_data_classes import TopicCreationResult, Status
 from utils.kafka_errors import extract_error_message
 from auth.auth_data_class import AuthResponse
-import json
 import time
+from producer.sender import send_message, send_message_cli
 
-def ensure_topic(topic:str, admin: AuthResponse) -> TopicCreationResult:
 
-    results = TopicCreationResult(topic = topic)
+def ensure_topic(topic: str, admin: AuthResponse) -> TopicCreationResult:
+    results = TopicCreationResult(topic=topic)
 
     try:
         is_available = admin.describe_topics([topic])
-        
-        if is_available[0]['error_code'] == 0:
+
+        if is_available[0]["error_code"] == 0:
             results.status = Status.EXISTS.value
             results.message = f"Topic '{topic}' already exists"
             results.created = True
@@ -31,13 +31,27 @@ def ensure_topic(topic:str, admin: AuthResponse) -> TopicCreationResult:
         results.message = str(e)
     return results
 
-def create_topic(topic:str, admin: AuthResponse) -> TopicCreationResult:
+
+def create_topic(topic: str, admin: AuthResponse) -> TopicCreationResult:
     topic_check = ensure_topic(topic, admin)
     if topic_check.created:
         return topic_check
-    results = TopicCreationResult(topic = topic)
+    results = TopicCreationResult(topic=topic)
     try:
-        admin.create_topics([NewTopic(name=topic,num_partitions=constants.PARTITIONS,replication_factor=constants.REPLICATION, topic_configs = {"retention.ms":constants.RETENTION,"cleanup.policy":constants.POLICY, "segment.ms": constants.SEGMENT})])
+        admin.create_topics(
+            [
+                NewTopic(
+                    name=topic,
+                    num_partitions=constants.PARTITIONS,
+                    replication_factor=constants.REPLICATION,
+                    topic_configs={
+                        "retention.ms": constants.RETENTION,
+                        "cleanup.policy": constants.POLICY,
+                        "segment.ms": constants.SEGMENT,
+                    },
+                )
+            ]
+        )
         results.status = Status.CREATED.value
         results.message = f"Topic '{topic}' created"
         results.created = True
@@ -51,11 +65,12 @@ def create_topic(topic:str, admin: AuthResponse) -> TopicCreationResult:
         results.message = str(e)
         return results
 
-def delete_topic(topic:str, admin: AuthResponse) -> TopicCreationResult:
+
+def delete_topic(topic: str, admin: AuthResponse) -> TopicCreationResult:
     topic_check = ensure_topic(topic, admin)
     if not topic_check.created:
         return topic_check
-    results = TopicCreationResult(topic = topic)
+    results = TopicCreationResult(topic=topic)
     try:
         admin.delete_topics([topic])
         results.status = Status.DELETED.value
@@ -65,17 +80,18 @@ def delete_topic(topic:str, admin: AuthResponse) -> TopicCreationResult:
         results.message = str(e)
     return results
 
-def consume (topic: str, admin):
+
+def consume(topic: str, admin):
     # topic_check = ensure_topic(topic, admin)
     # if not topic_check.created:
     #     print(topic_check.message)
-    #     return 
+    #     return
     results = create_topic(topic, admin)
     print(results.message)
     consumer = KafkaConsumer(
-    topic,
-    bootstrap_servers=constants.BOOTSTRAP_SERVERS,
-    auto_offset_reset="earliest",
+        topic,
+        bootstrap_servers=constants.BOOTSTRAP_SERVERS,
+        auto_offset_reset="earliest",
     )
 
     print(f"Connected and consuming: {topic}", flush=True)
@@ -83,51 +99,36 @@ def consume (topic: str, admin):
     for msg in consumer:
         print(f"{msg.value.decode()}", flush=True)
 
+
 def producer_cli(topic: str, msg: str, admin):
     topic_check = ensure_topic(topic, admin)
     if not topic_check.created:
         print(topic_check.message)
         return ""
-    print(f"{topic}:{msg}")
-    producer = KafkaProducer(
-        bootstrap_servers=constants.BOOTSTRAP_SERVERS,
-        value_serializer=lambda v: v.encode("utf-8"),
-    )
+    send_message_cli(topic=topic, msg=msg)
 
-    producer.send(topic,msg)
-    producer.flush()
-    print(f"'{msg}' sent to '{topic}'")
 
 def producer_stream(topic: str):
-    producer = KafkaProducer(
-        bootstrap_servers=constants.BOOTSTRAP_SERVERS,
-        value_serializer=lambda v: v.encode("utf-8"),
-    )
-
     while True:
         try:
             msg = input()
-            producer.send(topic, msg)
-            producer.flush()
+            send_message(topic=topic, msg=msg)
         except KeyboardInterrupt:
             print("Goodbye", flush=True)
             break
 
-def production_watcher(topic: str, log_file,admin:AuthResponse):
-    producer = KafkaProducer(
-        bootstrap_servers=constants.BOOTSTRAP_SERVERS,
-        value_serializer=lambda v: v.encode("utf-8"),
-    )
-    for line in tail_file(log_file):
-        producer.send(topic,line)
-        producer.flush()
 
-def tail_file(path:str):
+def production_watcher(topic: str, log_file, admin: AuthResponse):
+    for line in tail_file(log_file):
+        send_message(topic=topic, msg=line)
+
+
+def tail_file(path: str):
     with open(path, "r") as f:
-        f.seek(0,2)
+        f.seek(0, 2)
         while True:
             line = f.readline()
             if not line:
-                time.sleep(.3)
+                time.sleep(0.3)
                 continue
             yield line.rstrip("\n")

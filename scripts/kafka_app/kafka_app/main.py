@@ -1,8 +1,16 @@
 #!/usr/bin/env python3
 
-from topic.topics import delete_topic, create_topic, consume, producer_cli, producer_stream, production_watcher
+from topic.topics import (
+    delete_topic,
+    create_topic,
+    consume,
+    producer_cli,
+    producer_stream,
+    production_watcher,
+)
 from cli.cli import parse_args
 from auth.auth import auth
+
 
 def main():
     args = parse_args()
@@ -29,7 +37,8 @@ def main():
     elif args.producer_stream:
         producer_stream(topic)
     elif args.production:
-        production_watcher(topic,"/var/log/test.log",auth_results.admin)
+        production_watcher(topic, "/var/log/test.log", auth_results.admin)
+
 
 if __name__ == "__main__":
     main()
