@@ -6,8 +6,9 @@ from constant import constants
 from data_class.topic_data_classes import TopicCreationResult, Status
 from utils.kafka_errors import extract_error_message
 from auth.auth_data_class import AuthResponse
-import time
 from producer.sender import send_message, send_message_cli
+import time
+import sys
 
 
 def ensure_topic(topic: str, admin: AuthResponse) -> TopicCreationResult:
@@ -81,13 +82,13 @@ def delete_topic(topic: str, admin: AuthResponse) -> TopicCreationResult:
     return results
 
 
-def consume(topic: str, admin):
-    # topic_check = ensure_topic(topic, admin)
-    # if not topic_check.created:
-    #     print(topic_check.message)
-    #     return
-    results = create_topic(topic, admin)
-    print(results.message)
+def consume(topic: str, admin: AuthResponse):
+    topic_check = ensure_topic(topic, admin)
+    if not topic_check.created:
+        print(f"Error: Topic: '{topic} does exist. Consumer cannot start.")
+        print(f"Create Topic: '{topic}' in the kafka container.")
+        print("Then restart the python-env container")
+        sys.exit(1)
     consumer = KafkaConsumer(
         topic,
         bootstrap_servers=constants.BOOTSTRAP_SERVERS,
@@ -101,14 +102,20 @@ def consume(topic: str, admin):
 
 
 def producer_cli(topic: str, msg: str, admin):
-    topic_check = ensure_topic(topic, admin)
+    topic_check = create_topic(topic=topic, admin=admin)
+
     if not topic_check.created:
-        print(topic_check.message)
-        return ""
+        print(f"Topic '{topic}': '{topic_check.message}'")
+
     send_message_cli(topic=topic, msg=msg)
 
 
-def producer_stream(topic: str):
+def producer_stream(topic: str, admin: AuthResponse):
+    topic_check = create_topic(topic, admin)
+    if not topic_check.created:
+        print(f"Topic '{topic}': '{topic_check.message}'")
+        sys.exit(1)
+
     while True:
         try:
             msg = input()
