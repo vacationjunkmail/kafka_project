@@ -35,7 +35,7 @@ def main():
     elif args.producer_cli:
         producer_cli(topic, args.producer_cli, auth_results.admin)
     elif args.producer_stream:
-        producer_stream(topic)
+        producer_stream(topic, auth_results.admin)
     elif args.production:
         production_watcher(topic, "/var/log/test.log", auth_results.admin)
 
